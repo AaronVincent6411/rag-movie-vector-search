@@ -20,6 +20,23 @@ def generate_embedding(sentances: str) -> list[float]:
     return embeddings.tolist()
 
     
-for doc in collections.find({'plot':{"$exists":True}}).limit(50):
-    doc['plot_embedding_hf'] = generate_embedding(doc['plot'])
-    collections.replace_one({'_id':doc['_id']},doc)
+# for doc in collections.find({'plot':{"$exists":True}}).limit(50):
+#     doc['plot_embedding_hf'] = generate_embedding(doc['plot'])
+#     collections.replace_one({'_id':doc['_id']},doc)
+
+query = "imaginary characters from outer space at war"
+
+results = collections.aggregate([
+    {
+        "$vectorSearch": {
+            "queryVector":generate_embedding(query),
+            "path": "plot_embedding_hf",
+            "numCandidates":100,
+            "limit": 4,
+            "index":"PlotSemanticSearch"
+        }
+    }
+    ])
+
+for document in results:
+    print(f"Movie Name:{document["title"]},\n Movie Plot:{document["plot"]}\n")
